@@ -19,10 +19,11 @@ public class MainActivity {
 	public final static int VISUAL_OPERATION = 4; //Using visual servoig
 	public final static int EXIT = -1; //Close communication
 	
+	private int maxTries = 1;
 	private boolean forceExit = false;
 	
-	public final static Port motorL = MotorPort.A;
-	public final static Port motorR = MotorPort.D;
+	public final static Port motorL = MotorPort.D;
+	public final static Port motorR = MotorPort.A;
 	
 	private EV3MediumRegulatedMotor reMotorL = null;
 	private EV3MediumRegulatedMotor reMotorR = null;
@@ -42,13 +43,19 @@ public class MainActivity {
 		Thread thread = new Thread() {
             public void run() {
             	
-            	for (int i=0;i<10;i++){
+            	for (int i=0;i<maxTries;i++){
             		NXTConnection btLink = Bluetooth.getNXTCommConnector().waitForConnection(10000, NXTConnection.RAW);
             		try {
-						manageConnection(btLink);
-					} catch (IOException | InterruptedException e) {
+            			System.out.println("Connection finished...");
+            			manageConnection(btLink);		//error code is 104...uncathed
+					} catch (IOException e) {
+						e.printStackTrace();
+					} catch (InterruptedException e) {
+						e.printStackTrace();
+					} catch (Exception e) {
 						e.printStackTrace();
 					}
+            		closeEverything(btLink);
             		if(forceExit)
             			break;
         		}
@@ -66,6 +73,10 @@ public class MainActivity {
 		DataOutputStream dataOut=btLink.openDataOutputStream();
 		
 		while(isTransmiting){
+			while(dataIn.available()==0){ //In case of delays...
+				Thread.sleep(1);
+			}
+				
 			String commands=dataIn.readUTF();
 			String[] command=commands.split(";");
 			
@@ -73,22 +84,21 @@ public class MainActivity {
 				Audio audio = LocalEV3.get().getAudio();
 				audio.systemSound(Audio.ASCENDING);
 				dataOut.writeBoolean(true);
-				dataIn.close();
-				dataOut.close();
-				return;
+				dataOut.flush();
+				greeting=false;
+				continue;
 			}
-			greeting=false;
 			int operation = Integer.parseInt(command[0]);
 			if (operation==EXIT){
 				isTransmiting=false;
-			}
-			else if(operation==VISUAL_OPERATION){
+			}else if(operation==VISUAL_OPERATION){
 				turnMotors();
 			}else{
 				if(command.length>2)
 				moveMotors(Integer.parseInt(command[1]),Integer.parseInt(command[2]));
 			}
 			dataOut.writeBoolean(true);
+			dataOut.flush();
 			Thread.sleep(5);
 			
 			if(forceExit)
@@ -101,11 +111,14 @@ public class MainActivity {
 	
 	private void moveMotors(int powerL, int powerR){
 		
-		if(reMotorL!=null)
+		if(reMotorL!=null){
 			reMotorL.close();
-		if(reMotorR!=null)
+			reMotorL=null;
+		}
+		if(reMotorR!=null){
 			reMotorR.close();
-		
+			reMotorR=null;
+		}
 		if(enMotorL==null){
 			enMotorL = new NXTMotor(motorL);
 			enMotorL.resetTachoCount();
@@ -122,11 +135,14 @@ public class MainActivity {
 	}
 	
 	private void turnMotors(){
-		if(enMotorL!=null)
+		if(enMotorL!=null){
 			enMotorL.close();
-		if(enMotorR!=null)
+			enMotorL=null;
+		}
+		if(enMotorR!=null){
 			enMotorR.close();
-		
+			enMotorR=null;
+		}
 		if(reMotorL==null){
 			reMotorL = new EV3MediumRegulatedMotor(motorL);
 			reMotorL.resetTachoCount();
@@ -136,6 +152,39 @@ public class MainActivity {
 			reMotorR.resetTachoCount();
 		}
 		//TODO visual servoing here :S
+	}
+	
+	
+	
+	private void closeEverything(NXTConnection btLink){
+		System.out.println("closing everything...");
+		if(enMotorL!=null){
+			enMotorL.setPower(0);
+			enMotorL.close();
+			enMotorL=null;
+		}
+		if(enMotorR!=null){
+			enMotorR.setPower(0);
+			enMotorR.close();
+			enMotorR=null;
+		}
+		if(reMotorL!=null){
+			reMotorL.rotateTo(0);
+			reMotorL.close();
+			reMotorL=null;
+		}
+		if(reMotorR!=null){
+			reMotorR.rotateTo(0);
+			reMotorR.close();
+			reMotorR=null;
+		}
+		if(btLink!=null){
+			try {
+				btLink.close();
+			} catch (IOException e) {
+				e.printStackTrace();
+			}
+		}
 	}
 	
 	private void waitExit(){
