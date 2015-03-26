@@ -19,7 +19,7 @@ public class MainActivity {
 	public final static int VISUAL_OPERATION = 4; //Using visual servoig
 	public final static int EXIT = -1; //Close communication
 	
-	private int maxTries = 1;
+	private int maxTries = 1 ;
 	private boolean forceExit = false;
 	
 	public final static Port motorL = MotorPort.D;
