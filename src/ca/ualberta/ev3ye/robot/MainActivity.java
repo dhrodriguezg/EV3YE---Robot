@@ -45,7 +45,7 @@ public class MainActivity {
 		System.out.println("EV3YE Waiting...");
 		
 		for (int i=0;i<maxTries;i++){
-    		audio.systemSound(Audio.ASCENDING);
+    		audio.systemSound(Audio.DOUBLE_BEEP);
     		NXTConnection btLink = Bluetooth.getNXTCommConnector().waitForConnection(10000, NXTConnection.RAW);
     		try {
     			System.out.println("Connection finished...");
@@ -79,7 +79,7 @@ public class MainActivity {
 			String[] command=commands.split(";");
 			
 			if(greeting && command[0].equals("Are you Robot?")){
-				audio.systemSound(Audio.DOUBLE_BEEP);
+				audio.systemSound(Audio.ASCENDING);
 				dataOut.writeBoolean(true);
 				dataOut.flush();
 				greeting=false;
