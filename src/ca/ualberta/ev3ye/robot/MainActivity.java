@@ -30,6 +30,8 @@ public class MainActivity {
 	
 	private NXTMotor enMotorL = null;
 	private NXTMotor enMotorR = null;
+	
+	private Audio audio = null;
 
 	public static void main(String[] args) {
 		MainActivity robot = new MainActivity();
@@ -39,30 +41,26 @@ public class MainActivity {
 	
 	
 	private void waitForConnections(){
+		audio = LocalEV3.get().getAudio();
 		System.out.println("EV3YE Waiting...");
-		Thread thread = new Thread() {
-            public void run() {
-            	
-            	for (int i=0;i<maxTries;i++){
-            		NXTConnection btLink = Bluetooth.getNXTCommConnector().waitForConnection(10000, NXTConnection.RAW);
-            		try {
-            			System.out.println("Connection finished...");
-            			manageConnection(btLink);		//error code is 104...uncathed
-					} catch (IOException e) {
-						e.printStackTrace();
-					} catch (InterruptedException e) {
-						e.printStackTrace();
-					} catch (Exception e) {
-						e.printStackTrace();
-					}
-            		closeEverything(btLink);
-            		if(forceExit)
-            			break;
-        		}
-            	
-            }
-        };
-        thread.start();
+		
+		for (int i=0;i<maxTries;i++){
+    		audio.systemSound(Audio.ASCENDING);
+    		NXTConnection btLink = Bluetooth.getNXTCommConnector().waitForConnection(10000, NXTConnection.RAW);
+    		try {
+    			System.out.println("Connection finished...");
+    			manageConnection(btLink);		//error code is 104...uncathed
+			} catch (IOException e) {
+				e.printStackTrace();
+			} catch (InterruptedException e) {
+				e.printStackTrace();
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+    		closeEverything(btLink);
+    		if(forceExit)
+    			break;
+		}
 	}
 	
 	private void manageConnection(NXTConnection btLink) throws IOException, InterruptedException{
@@ -81,8 +79,7 @@ public class MainActivity {
 			String[] command=commands.split(";");
 			
 			if(greeting && command[0].equals("Are you Robot?")){
-				Audio audio = LocalEV3.get().getAudio();
-				audio.systemSound(Audio.ASCENDING);
+				audio.systemSound(Audio.DOUBLE_BEEP);
 				dataOut.writeBoolean(true);
 				dataOut.flush();
 				greeting=false;
@@ -188,7 +185,8 @@ public class MainActivity {
 	}
 	
 	private void waitExit(){
-		Button.waitForAnyPress();
+		//Button.waitForAnyPress();
+		audio.systemSound(Audio.DESCENDING);
 		forceExit = true;
 	}
 	
