@@ -13,11 +13,11 @@ import lejos.remote.nxt.*;
 
 public class MainActivity { 
 
-	public final static int CONTROLLER_OPERATION = 1; //Using gamepad
-	public final static int TOUCH_OPERATION = 2; //Using touchscreen
-	public final static int MOTION_OPERATION = 3; //Using acelerometers
-	public final static int VISUAL_OPERATION = 4; //Using visual servoig
-	public final static int EXIT = -1; //Close communication
+	public final static int CONTROLLER_OPERATION = 1;//Using gamepad
+	public final static int TOUCH_OPERATION = 2; 		//Using touchscreen
+	public final static int MOTION_OPERATION = 3; 	//Using acelerometers
+	public final static int VISUAL_OPERATION = 4; 	//Using visual servoig
+	public final static int EXIT = -1; 				//Close communication
 	
 	private int maxTries = 1;
 	private boolean forceExit = false;
